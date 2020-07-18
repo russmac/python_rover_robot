@@ -1,0 +1,7 @@
+.idea
+venv
+pinouts
+*.pdf
+__pycache_
+config/*
+cache

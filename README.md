@@ -7,6 +7,7 @@ It does not yet navigate by the houghline detection it performs due to the capab
 
 The navigation loop seems to be limited by the multithreading performance of Python. I will be attempting to re-create the whole framework  in Rust.
 
+![Robot](/doc/robot.png)
 
 ## Supported OS.
 Raspbian Stable/Raspberry Pi OS stable

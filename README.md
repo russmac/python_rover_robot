@@ -86,7 +86,82 @@ python3 threaded.py
 
 The app looks for a camera calibration in ./config matching the camera id in instance/config.py , The same config is used in the calibration helper scripts so the files should be correctly named.
 
-The robot will concurrently look for a locally saved Bosch BNO055 calibration, Whichever parts are present will be used, You will be prompted to calibrate the rest.
+The robot will concurrently look for a locally saved Bosch BNO055 calibration, Whichever parts are present will be used, You will be prompted to calibrate the rest. 
+
+https://www.youtube.com/watch?v=Bw0WuAyGsnY
+
+```
+root@media-desktop:/robot/python_rover_robot# python3 threaded.py 
+WARNING | Orientation | Expecting value: line 1 column 1 (char 0)
+INFO | Orientation | Calibrate now!
+INFO | Orientation | 
+Gyroscope: 0
+Acceleromter: 0
+Magnetometer: 0
+
+...
+
+Follow calibration video instructions
+
+...
+
+INFO | Orientation | 
+Gyroscope: 3
+Acceleromter: 1
+Magnetometer: 3
+
+INFO | Orientation | Fully calibrated
+INFO | Orientation | Switching to config mode
+INFO | Orientation | Saving to cache: GYR_OFFSET_X_LSB
+INFO | Orientation | 0
+INFO | Orientation | Saving to cache: GYR_OFFSET_X_MSB
+INFO | Orientation | 0
+INFO | Orientation | Saving to cache: GYR_OFFSET_Y_LSB
+INFO | Orientation | 3
+INFO | Orientation | Saving to cache: GYR_OFFSET_Y_MSB
+INFO | Orientation | 0
+INFO | Orientation | Saving to cache: GYR_OFFSET_Z_LSB
+INFO | Orientation | 0
+INFO | Orientation | Saving to cache: GYR_OFFSET_Z_MSB
+INFO | Orientation | 0
+INFO | Orientation | Saving to cache: MAG_OFFSET_X_LSB
+INFO | Orientation | 24
+INFO | Orientation | Saving to cache: MAG_OFFSET_X_MSB
+INFO | Orientation | 0
+INFO | Orientation | Saving to cache: MAG_OFFSET_Y_LSB
+INFO | Orientation | 86
+INFO | Orientation | Saving to cache: MAG_OFFSET_Y_MSB
+INFO | Orientation | 0
+INFO | Orientation | Saving to cache: MAG_OFFSET_Z_LSB
+INFO | Orientation | 215
+INFO | Orientation | Saving to cache: MAG_OFFSET_Z_MSB
+INFO | Orientation | 0
+INFO | Orientation | Saving to cache: ACC_OFFSET_X_LSB
+INFO | Orientation | 200
+INFO | Orientation | Saving to cache: ACC_OFFSET_X_MSB
+INFO | Orientation | 255
+INFO | Orientation | Saving to cache: ACC_OFFSET_Y_LSB
+INFO | Orientation | 22
+INFO | Orientation | Saving to cache: ACC_OFFSET_Y_MSB
+INFO | Orientation | 0
+INFO | Orientation | Saving to cache: ACC_OFFSET_Z_LSB
+INFO | Orientation | 227
+INFO | Orientation | Saving to cache: ACC_OFFSET_Z_MSB
+INFO | Orientation | 255
+INFO | Orientation | Saving to cache: ACC_RADIUS_LSB
+INFO | Orientation | 232
+INFO | Orientation | Saving to cache: ACC_RADIUS_MSB
+INFO | Orientation | 3
+INFO | Orientation | Saving to cache: MAG_RADIUS_LSB
+INFO | Orientation | 189
+INFO | Orientation | Saving to cache: MAG_RADIUS_MSB
+INFO | Orientation | 2
+INFO | Orientation | Configured calibration cache
+INFO | Orientation | Switching back to NDOF mode
+INFO | Driver | Sensor data populated
+WARNING | Driver | I think its clear... driving
+```
+
 
 ## Using the calibration tools 
 https://docs.opencv.org/2.4/doc/tutorials/calib3d/camera_calibration/camera_calibration.html#

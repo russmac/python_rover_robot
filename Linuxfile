@@ -14,3 +14,5 @@ libqtgui4
 libqtwebkit4
 libqt4-test
 python3-pyqt5
+python3-opengl
+'python3-picamera2 --no-install-recommends'

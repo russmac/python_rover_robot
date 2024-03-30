@@ -2,10 +2,10 @@ adafruit-circuitpython-ads1x15
 adafruit-circuitpython-bno055
 Adafruit-Blinka
 RPi.GPIO
-picamera
 flask
 rq
 wiringpi
 numpy
-opencv-contrib-python==4.1.0.25
+opencv-contrib-python
 matplotlib
+picamera2

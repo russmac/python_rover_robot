@@ -9,3 +9,6 @@ numpy
 opencv-contrib-python
 matplotlib
 picamera2
+board
+adafruit-extended-bus
+python3-libcamera

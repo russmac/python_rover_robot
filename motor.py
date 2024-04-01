@@ -17,13 +17,12 @@ class Motor:
         self.en_pin = en_pin
         self.slew_pin = slew_pin
         self.sf_pin = sf_pin
-        self.max_speed = 480
+        self.max_speed = 200
         wiringpi.wiringPiSetupGpio()
         wiringpi.pinMode(12, wiringpi.GPIO.PWM_OUTPUT)
         wiringpi.pinMode(13, wiringpi.GPIO.PWM_OUTPUT)
         wiringpi.pwmSetMode(wiringpi.GPIO.PWM_MODE_MS)
         wiringpi.pwmSetRange(self.max_speed)
-        wiringpi.pwmSetClock(2)
         wiringpi.pinMode(self.forward_pin,  wiringpi.GPIO.OUTPUT)
         wiringpi.pinMode(self.reverse_pin,  wiringpi.GPIO.OUTPUT)
         wiringpi.pinMode(self.en_pin,  wiringpi.GPIO.OUTPUT)
@@ -37,17 +36,16 @@ class Motor:
     def disable(self):
         wiringpi.digitalWrite(self.en_pin, 0)
         wiringpi.digitalWrite(self.slew_pin, 0)
-        wiringpi.pwmWrite(self.pwm_pin, 0)
 
-    def move(self, direction: int, speed: int = 480):
+    def move(self, direction: str, speed: int = 200):
         if speed > self.max_speed:
             speed = self.max_speed
-        if direction is 1:
+        if direction == "forwards":
             self.enable()
             wiringpi.digitalWrite(self.reverse_pin, 0)
             wiringpi.digitalWrite(self.forward_pin, 1)
             wiringpi.pwmWrite(self.pwm_pin, speed)
-        elif direction is 0:
+        elif direction == "backwards":
             self.enable()
             wiringpi.digitalWrite(self.forward_pin, 0)
             wiringpi.digitalWrite(self.reverse_pin, 1)

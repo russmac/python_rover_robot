@@ -56,14 +56,15 @@ class Orientation():
     def start(self):
         # Check for calibration and attempt to load if none.
         if not self.check_calibration():
-            self.load_stored_calibration()
+            if not self.load_stored_calibration():
+                logging.warning("Could not load calibration")
         if self.sensor.calibrated and self.check_calibration():
             logging.info('Fully calibrated')
         else:
             logging.info('Calibrate now!')
             while True:
                 logging.info(f'\nGyroscope: {self.sensor.calibration_status[1]}\n'
-                             f'Acceleromter: {self.sensor.calibration_status[2]}\n'
+                             f'Accelerometer: {self.sensor.calibration_status[2]}\n'
                              f'Magnetometer: {self.sensor.calibration_status[3]}\n')
                 sleep(1)
                 if self.check_calibration():

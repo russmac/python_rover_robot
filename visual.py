@@ -1,5 +1,5 @@
 import robot_data as rd
-import picamera
+from picamera2 import Picamera2
 import time
 import logging
 import numpy as np
@@ -14,6 +14,7 @@ class Visual():
         self.objpoints = np.load(f'config/{config["id"]}_obj.npy')
         self.imgpoints = np.load(f'config/{config["id"]}_img.npy')
         self.sample_image = cv2.imread(f'config/{config["id"]}_sample_image.jpg')
+        print(self.sample_image)
         self.mipi_calibration = tuple()
         self.camera_y = config['camera_y']
         self.camera_x = config['camera_x']
@@ -24,8 +25,8 @@ class Visual():
         self.canny_params = config['canny_params']
         self.hough_params = config['hough_params']
         self.fisheye = config['fisheye']
-        self.camera = picamera.PiCamera()
-        self.camera.resolution = (self.camera_x, self.camera_y)
+        self.camera = Picamera2()
+        self.camera.create_still_configuration(lores={"size": (self.camera_x, self.camera_y)}, display=None)
         self.camera.framerate = self.framerate
         self.mipi_calibration = self.get_fisheye_calibration(self.objpoints, self.imgpoints)
         self.canny_auto_levels = config['canny_auto_levels']
@@ -62,6 +63,7 @@ class Visual():
         rvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(grid_size)]
         tvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(grid_size)]
         h, w = image.shape[:2]
+        logging.debug(f'h, w ; {h}, {w}')
 
         calibrate_params = (
             objp,
@@ -223,8 +225,9 @@ class Visual():
         try:
             timer = time.time()
             image = np.empty((self.camera_y * self.camera_x * 3,), dtype=np.uint8)
-            self.camera.capture(image, 'bgr')
-            logging.debug(f'Time taken for MIPI IMAGE: {time.time() - timer}')
+            image.fill(self.camera.capture_array("main"))
+            self.camera.framerate = time.time() - timer
+            logging.debug(f'Time taken for IMAGE: {time.time() - timer}')
             return image
         except Exception as e:
             logging.critical(e)

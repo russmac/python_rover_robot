@@ -149,6 +149,9 @@ class Visual():
             logging.critical(e)
 
     def undistort_image(self, image, camera_matrix, distortion, new_camera_matrix, roi):
+        """
+        Currently broken
+        """
         try:
             image = image.reshape((self.camera_y, self.camera_x, 3))
             undistorted_image = cv2.undistort(image, camera_matrix, distortion, new_camera_matrix)
@@ -161,7 +164,6 @@ class Visual():
 
     def undistort_fisheye_image(self, image, camera_matrix, distortion, new_camera_matrix, roi):
         try:
-            # image = image.reshape((self.camera_y, self.camera_x, 3))
             map_y, map_x = cv2.fisheye.initUndistortRectifyMap(camera_matrix,
                                                                distortion,
                                                                np.eye(3, 3),
@@ -195,7 +197,7 @@ class Visual():
                                                      new_camera_matrix,
                                                      roi
                                                      )
-        logging.info(f'Time taken for UNDISTORTION: {time.time() - timer}')
+        logging.debug(f'Time taken for UNDISTORTION: {time.time() - timer}')
         edges = self.get_edges(undistorted_image)
         lines = self.get_lines(edges)
         if lines is None:

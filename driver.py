@@ -93,7 +93,7 @@ class Driver:
     def drive(self, distance_cm: int = 10, direction: str = "forwards"):
         self.last_turn = None
         self.turns = 0
-        logging.info(f'Driving {distance_cm} centimeters {direction}')
+        logging.debug(f'Driving {distance_cm} centimeters {direction}')
         initial_distance = rd.current_distances[1]
         initial_time = time.time()
         motors_on = False

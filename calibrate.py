@@ -14,8 +14,7 @@ def read_calibration_images():
 
     if config['fisheye']:
         # We need an extra dimensions for the fisheye calibrate method
-        objp = np.zeros((1, CHESSBOARD[0] * CHESSBOARD[1
-        ], 3), np.float32)
+        objp = np.zeros((1, CHESSBOARD[0] * CHESSBOARD[1], 3), np.float32)
         objp[0, :, :2] = np.mgrid[0:CHESSBOARD[0], 0:CHESSBOARD[1]].T.reshape(-1, 2)
         # termination criteria
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)

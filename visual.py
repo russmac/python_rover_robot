@@ -6,7 +6,6 @@ import numpy as np
 import cv2
 from utils import parse_config
 
-
 class Visual():
     def __init__(self):
         config = parse_config()["camera"]
@@ -14,37 +13,45 @@ class Visual():
         self.objpoints = np.load(f'config/{config["id"]}_obj.npy')
         self.imgpoints = np.load(f'config/{config["id"]}_img.npy')
         self.sample_image = cv2.imread(f'config/{config["id"]}_sample_image.jpg')
-        print(self.sample_image)
         self.mipi_calibration = tuple()
         self.camera_y = config['camera_y']
         self.camera_x = config['camera_x']
-        # todo: Catch other PiCamera resolution roundups
-        if self.camera_y == 1080:
-            self.camera_y = 1088
-        self.framerate = config['framerate']
         self.canny_params = config['canny_params']
         self.hough_params = config['hough_params']
         self.fisheye = config['fisheye']
         self.camera = Picamera2()
-        self.camera.create_still_configuration(lores={"size": (self.camera_x, self.camera_y)}, display=None)
-        self.camera.framerate = self.framerate
+        # https://picamera.readthedocs.io/en/release-1.13/_images/sensor_area_2.png
+        camera_config = self.camera.create_still_configuration(main={"size": (1640, 1232)})
+        self.camera.configure(camera_config)
         self.mipi_calibration = self.get_fisheye_calibration(self.objpoints, self.imgpoints)
         self.canny_auto_levels = config['canny_auto_levels']
         self.stream_canny = config['stream_canny']
+
+    def cleanup(self):
+        try:
+            self.camera.stop()
+            self.camera.close()
+        except Exception as e:
+            pass
 
     def start(self):
         try:
             frequency_counter = 1
             frequency = 0
             f_timer = time.time()
+            while not self.camera.is_open:
+                time.sleep(0.25)
+            self.camera.start()
             while True:
                 mipi_image = self.frame()
                 rd.stream_input.write(mipi_image.tobytes())
                 frequency = (time.time() - f_timer) / frequency_counter
-                logging.debug(f'VISUAL FREQUENCY: {frequency}')
+                logging.info(f'VISUAL FREQUENCY: {frequency}')
                 frequency_counter += 1
         except Exception as e:
             logging.critical(e)
+            self.camera.stop()
+            self.camera.close()
 
     def get_fisheye_calibration(self, objp, imgp):
         logging.debug('Loading Camera calibration')
@@ -154,7 +161,7 @@ class Visual():
 
     def undistort_fisheye_image(self, image, camera_matrix, distortion, new_camera_matrix, roi):
         try:
-            image = image.reshape((self.camera_y, self.camera_x, 3))
+            # image = image.reshape((self.camera_y, self.camera_x, 3))
             map_y, map_x = cv2.fisheye.initUndistortRectifyMap(camera_matrix,
                                                                distortion,
                                                                np.eye(3, 3),
@@ -188,11 +195,11 @@ class Visual():
                                                      new_camera_matrix,
                                                      roi
                                                      )
-        logging.debug(f'Time taken for UNDISTORTION: {time.time() - timer}')
+        logging.info(f'Time taken for UNDISTORTION: {time.time() - timer}')
         edges = self.get_edges(undistorted_image)
         lines = self.get_lines(edges)
         if lines is None:
-            logging.debug('no houghlines drawn')
+            logging.debug('No houghlines drawn')
             return undistorted_image, edges
         if self.hough_params["probabilistic"]:
             for row in lines:
@@ -213,22 +220,23 @@ class Visual():
 
     def frame(self):
         timer = time.time()
-        undistorted_image, edges = self.process_image(self.get_image(), *self.mipi_calibration)
+        undistorted_image, edges = self.process_image(self.get_resized_image(), *self.mipi_calibration)
         if self.stream_canny:
             res, data = cv2.imencode(ext='.jpg', img=edges)
+            print("!!!!!!!!!!!!!!!")
+            print(res)
         else:
             res, data = cv2.imencode(ext='.jpg', img=undistorted_image)
         logging.debug(f'Time taken for MIPI processing: {time.time() - timer}')
         return data
 
-    def get_image(self):
+    def get_resized_image(self):
         try:
             timer = time.time()
-            image = np.empty((self.camera_y * self.camera_x * 3,), dtype=np.uint8)
-            image.fill(self.camera.capture_array("main"))
+            resized_image = cv2.resize(self.camera.capture_array(name="main"), (self.camera_y, self.camera_x))
             self.camera.framerate = time.time() - timer
             logging.debug(f'Time taken for IMAGE: {time.time() - timer}')
-            return image
+            return resized_image
         except Exception as e:
             logging.critical(e)
 

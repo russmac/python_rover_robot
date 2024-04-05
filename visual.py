@@ -223,8 +223,6 @@ class Visual():
         undistorted_image, edges = self.process_image(self.get_resized_image(), *self.mipi_calibration)
         if self.stream_canny:
             res, data = cv2.imencode(ext='.jpg', img=edges)
-            print("!!!!!!!!!!!!!!!")
-            print(res)
         else:
             res, data = cv2.imencode(ext='.jpg', img=undistorted_image)
         logging.debug(f'Time taken for MIPI processing: {time.time() - timer}')

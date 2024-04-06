@@ -3,9 +3,7 @@ This is a Python Rover project which currently uses 3 ultrasonic sensors and a m
 
 It is capable of streaming basic OpenCV image processing done onboard at roughly 700ms frequency (very slow), helper scripts are included to calibrate a lens for image processing. 
 
-It does not yet navigate by the houghline detection it performs due to the capability being limited by the visual frequency.
-
-The navigation loop seems to be limited by the multithreading performance of Python. I will be attempting to re-create the whole framework  in Rust.
+It does not navigate by the houghline detection it performs due to the capability being limited by the visual frequency. Of roughly 2.5fps which would be impacted further by additional processing. 
 
 ![Robot](/doc/robot.png)
 
@@ -166,8 +164,8 @@ WARNING | Driver | I think its clear... driving
 ## Using the calibration tools 
 https://docs.opencv.org/2.4/doc/tutorials/calib3d/camera_calibration/camera_calibration.html#
 
-1. Run ./calibration_capture.py on your Rpi and take your captures
-2. You need to rsync or scp ~/robot/calibration to ~/samples/calibration on your local machine when your done.
+1. Run ./calibration_capture.py on your Rpi and take your captures, This process is really important to get right as without an undistorted image machine vision algorithms are ineffective.
+2. You need to rsync or scp ~/robot/calibration to ~/samples/calibration on your local machine when you're done.
 3. You then run calibrate.py and it will show you progress as it attempts to find chessboard corners.
 4. Succesfully chessboarded calibration images will be saved (and drawn on) under samples/results , Failures will be deleted from samples/calibration.
 5. Numpy binary arrays will be saved under samples/config , You need to SCP or Rsync these to ~/robot/config (including sample_image.jpg).

@@ -37,7 +37,6 @@ class Visual():
     def start(self):
         try:
             frequency_counter = 1
-            frequency = 0
             f_timer = time.time()
             while not self.camera.is_open:
                 time.sleep(0.25)
@@ -46,7 +45,7 @@ class Visual():
                 mipi_image = self.frame()
                 rd.stream_input.write(mipi_image.tobytes())
                 frequency = (time.time() - f_timer) / frequency_counter
-                logging.info(f'VISUAL FREQUENCY: {frequency}')
+                logging.debug(f'VISUAL FREQUENCY: {frequency}')
                 frequency_counter += 1
         except Exception as e:
             logging.critical(e)

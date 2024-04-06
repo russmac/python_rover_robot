@@ -46,20 +46,19 @@ class Ultrasonic:
         rd.r_path = (self.distances[2] > self.path_distance)
 
     def get_distances(self):
-        distances = [0, 0, 0]
         self.ussl_trigger.start(100)
         self.ussl_trigger.stop()
-        distances[0] = self.convert_voltage(self.ussl.voltage)
+        self.distances[0] = self.convert_voltage(self.ussl.voltage)
         sleep(0.037)
         self.ussc_trigger.start(100)
         self.ussc_trigger.stop()
-        distances[1] = self.convert_voltage(self.ussc.voltage)
+        self.distances[1] = self.convert_voltage(self.ussc.voltage)
         sleep(0.037)
         self.ussr_trigger.start(100)
         self.ussr_trigger.stop()
-        distances[2] = self.convert_voltage(self.ussr.voltage)
+        self.distances[2] = self.convert_voltage(self.ussr.voltage)
         sleep(0.037)
-        robot_data.current_distances = distances
+        robot_data.current_distances = self.distances
 
     @staticmethod
     def convert_voltage(voltage):

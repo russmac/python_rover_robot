@@ -1,3 +1,4 @@
+import os
 import threading
 from ultrasonic import Ultrasonic
 from orientation import Orientation
@@ -7,7 +8,8 @@ from stream import Stream
 import logging
 
 ROBOT_NAME = 'Robot'
-logging.basicConfig(level=logging.INFO, format='%(levelname)s | %(threadName)s | %(message)s')
+log_level = os.getenv('LOG_LEVEL', 'INFO')
+logging.basicConfig(level=log_level, format='%(levelname)s | %(threadName)s | %(message)s')
 
 if __name__ == "__main__":
     ultrasonic = Ultrasonic()

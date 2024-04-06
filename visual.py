@@ -1,11 +1,10 @@
 import robot_data as rd
-import picamera
+from picamera2 import Picamera2
 import time
 import logging
 import numpy as np
 import cv2
 from utils import parse_config
-
 
 class Visual():
     def __init__(self):
@@ -17,25 +16,31 @@ class Visual():
         self.mipi_calibration = tuple()
         self.camera_y = config['camera_y']
         self.camera_x = config['camera_x']
-        # todo: Catch other PiCamera resolution roundups
-        if self.camera_y == 1080:
-            self.camera_y = 1088
-        self.framerate = config['framerate']
         self.canny_params = config['canny_params']
         self.hough_params = config['hough_params']
         self.fisheye = config['fisheye']
-        self.camera = picamera.PiCamera()
-        self.camera.resolution = (self.camera_x, self.camera_y)
-        self.camera.framerate = self.framerate
+        self.camera = Picamera2()
+        # https://picamera.readthedocs.io/en/release-1.13/_images/sensor_area_2.png
+        camera_config = self.camera.create_still_configuration(main={"size": (1640, 1232)})
+        self.camera.configure(camera_config)
         self.mipi_calibration = self.get_fisheye_calibration(self.objpoints, self.imgpoints)
         self.canny_auto_levels = config['canny_auto_levels']
         self.stream_canny = config['stream_canny']
 
+    def cleanup(self):
+        try:
+            self.camera.stop()
+            self.camera.close()
+        except Exception as e:
+            pass
+
     def start(self):
         try:
             frequency_counter = 1
-            frequency = 0
             f_timer = time.time()
+            while not self.camera.is_open:
+                time.sleep(0.25)
+            self.camera.start()
             while True:
                 mipi_image = self.frame()
                 rd.stream_input.write(mipi_image.tobytes())
@@ -44,6 +49,8 @@ class Visual():
                 frequency_counter += 1
         except Exception as e:
             logging.critical(e)
+            self.camera.stop()
+            self.camera.close()
 
     def get_fisheye_calibration(self, objp, imgp):
         logging.debug('Loading Camera calibration')
@@ -62,6 +69,7 @@ class Visual():
         rvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(grid_size)]
         tvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(grid_size)]
         h, w = image.shape[:2]
+        logging.debug(f'h, w ; {h}, {w}')
 
         calibrate_params = (
             objp,
@@ -140,6 +148,9 @@ class Visual():
             logging.critical(e)
 
     def undistort_image(self, image, camera_matrix, distortion, new_camera_matrix, roi):
+        """
+        Currently broken
+        """
         try:
             image = image.reshape((self.camera_y, self.camera_x, 3))
             undistorted_image = cv2.undistort(image, camera_matrix, distortion, new_camera_matrix)
@@ -152,7 +163,6 @@ class Visual():
 
     def undistort_fisheye_image(self, image, camera_matrix, distortion, new_camera_matrix, roi):
         try:
-            image = image.reshape((self.camera_y, self.camera_x, 3))
             map_y, map_x = cv2.fisheye.initUndistortRectifyMap(camera_matrix,
                                                                distortion,
                                                                np.eye(3, 3),
@@ -190,7 +200,7 @@ class Visual():
         edges = self.get_edges(undistorted_image)
         lines = self.get_lines(edges)
         if lines is None:
-            logging.debug('no houghlines drawn')
+            logging.debug('No houghlines drawn')
             return undistorted_image, edges
         if self.hough_params["probabilistic"]:
             for row in lines:
@@ -211,7 +221,7 @@ class Visual():
 
     def frame(self):
         timer = time.time()
-        undistorted_image, edges = self.process_image(self.get_image(), *self.mipi_calibration)
+        undistorted_image, edges = self.process_image(self.get_resized_image(), *self.mipi_calibration)
         if self.stream_canny:
             res, data = cv2.imencode(ext='.jpg', img=edges)
         else:
@@ -219,13 +229,13 @@ class Visual():
         logging.debug(f'Time taken for MIPI processing: {time.time() - timer}')
         return data
 
-    def get_image(self):
+    def get_resized_image(self):
         try:
             timer = time.time()
-            image = np.empty((self.camera_y * self.camera_x * 3,), dtype=np.uint8)
-            self.camera.capture(image, 'bgr')
-            logging.debug(f'Time taken for MIPI IMAGE: {time.time() - timer}')
-            return image
+            resized_image = cv2.resize(self.camera.capture_array(name="main"), (self.camera_y, self.camera_x))
+            self.camera.framerate = time.time() - timer
+            logging.debug(f'Time taken for IMAGE: {time.time() - timer}')
+            return resized_image
         except Exception as e:
             logging.critical(e)
 

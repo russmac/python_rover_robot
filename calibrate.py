@@ -4,7 +4,7 @@ import cv2
 import glob
 import os
 from utils import parse_config
-import shutil.copy2
+from shutil import copy2
 
 CHESSBOARD = (7, 7)
 
@@ -58,7 +58,10 @@ def read_calibration_images():
 
     np.save(f'samples/config/{config["id"]}_obj', objpoints)
     np.save(f'samples/config/{config["id"]}_img', imgpoints)
-    shutil.copy2(f'samples/results/success_0.jpg', f'samples/config/{config["id"]}_sample_image.jpg', )
+    try:
+        copy2(f'samples/results/success_0.jpg', f'samples/config/{config["id"]}_sample_image.jpg', )
+    except FileNotFoundError as fnf:
+        print(f'It seems no successful calibration occurred and no image was saved. {fnf}')
 
 
 if __name__ == '__main__':

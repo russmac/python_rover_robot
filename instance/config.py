@@ -1,14 +1,14 @@
-camera_selection = "picamera_v2_vga"
+camera_selection = "picamera_v2"
 
 camera_configurations = {
-    "picamera_v2_vga": {
-        "id": "picamera_v2_vga",
+    "picamera_v2": {
+        "id": "picamera_v2",
         "fisheye": True,
         "canny_auto_levels": True,
         "stream_canny": False,
         "camera_x": 640,
         "camera_y": 480,
-        "framerate": 90,
+        "framerate": 210,
         "canny_params": {"upper": 160,
                          "lower": 40},
         "hough_params": {"minLineLength": 100,
@@ -36,12 +36,12 @@ motor_configuration = {
 
 ultrasonic_configuration = {
     "ussl_pin": 7,
-    "ussc_pin": 8,
-    "ussr_pin": 25,
+    "ussc_pin": 25,
+    "ussr_pin": 8,
     # How many cm is considered clear from center sensor
-    "clear_distance_c": 18,
+    "clear_distance_c": 35,
     # How many cm is considered clear from side sensors
-    "clear_distance_side": 30,
+    "clear_distance_side": 35,
     # What cm is a clear path.
-    "path_distance": 38,
+    "path_distance": 48,
 }

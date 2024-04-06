@@ -2,9 +2,10 @@ import board
 import busio
 import adafruit_ads1x15.ads1015 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
-from RPi import GPIO
+import RPi.GPIO as GPIO
 from time import sleep
-import logging
+
+import robot_data
 import robot_data as rd
 from utils import parse_config
 
@@ -33,9 +34,8 @@ class Ultrasonic:
 
     def start(self):
         while True:
-            self.distances = self.get_distances()
+            self.get_distances()
             self.evaluate_distances()
-            logging.debug(self.distances)
 
     def evaluate_distances(self):
         rd.l_clear = (self.distances[0] > self.clear_distance_side)
@@ -46,23 +46,19 @@ class Ultrasonic:
         rd.r_path = (self.distances[2] > self.path_distance)
 
     def get_distances(self):
-        distances = [0, 0, 0]
         self.ussl_trigger.start(100)
         self.ussl_trigger.stop()
-        distances[0] = self.convert_voltage(self.ussl.voltage)
-        rd.current_distances[0] = distances[0]
+        self.distances[0] = self.convert_voltage(self.ussl.voltage)
         sleep(0.037)
         self.ussc_trigger.start(100)
         self.ussc_trigger.stop()
-        distances[1] = self.convert_voltage(self.ussc.voltage)
-        rd.current_distances[1] = distances[1]
+        self.distances[1] = self.convert_voltage(self.ussc.voltage)
         sleep(0.037)
         self.ussr_trigger.start(100)
         self.ussr_trigger.stop()
-        distances[2] = self.convert_voltage(self.ussr.voltage)
-        rd.current_distances[2] = distances[2]
+        self.distances[2] = self.convert_voltage(self.ussr.voltage)
         sleep(0.037)
-        return distances
+        robot_data.current_distances = self.distances
 
     @staticmethod
     def convert_voltage(voltage):

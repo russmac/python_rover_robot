@@ -6,7 +6,6 @@ import logging
 import time
 from utils import parse_config
 
-
 class Driver:
     def __init__(self):
         motors = parse_config()['motors']
@@ -26,7 +25,6 @@ class Driver:
                                  name='right')
         self.motor_left.disable()
         self.motor_right.disable()
-        # todo: Implement a 2d matrix to represent direction and duration of previous movement.
         self.travel_memory = list()
         self.turn_a = 22.5
         self.turn_limit = 180 / self.turn_a
@@ -50,7 +48,7 @@ class Driver:
         while True:
             # If its clear ahead left and right continue forwards.
             if rd.c_clear and rd.l_clear and rd.r_clear:
-                logging.warning('I think its clear... driving')
+                logging.info(f'I think its clear... heading: {rd.current_heading}')
                 self.drive()
                 # todo: Use travel_memory to map previous movement
                 self.travel_memory.append([rd.current_heading, int(time.time())])
@@ -92,14 +90,10 @@ class Driver:
             return -180
 
     # Drive in a straight(ish) line
-    def drive(self, distance_cm: int = 10, direction: int = 0):
+    def drive(self, distance_cm: int = 10, direction: str = "forwards"):
         self.last_turn = None
         self.turns = 0
-        if direction is 1:
-            direction_str = 'Forward'
-        else:
-            direction_str = 'Reverse'
-        logging.debug(f'Driving {distance_cm} centimeters {direction_str}')
+        logging.debug(f'Driving {distance_cm} centimeters {direction}')
         initial_distance = rd.current_distances[1]
         initial_time = time.time()
         motors_on = False
@@ -107,13 +101,13 @@ class Driver:
             if not (rd.c_clear and rd.l_clear and rd.r_clear):
                 # Something got in the way
                 return False
-            # We only drive for 1000ms or 10cm whichever is first.
+            # We only drive for 1000ms or 10cm whichever is first. # todo: Check accelerometer we are actually moving
             if time.time() > initial_time + 1:
                 return True
             if not rd.current_heading or not rd.current_distances:
                 self.motor_left.disable()
                 self.motor_right.disable()
-                logging.warning('Lost navigation data')
+                logging.error('Lost navigation data')
                 continue
             # todo: discard outliers in ultrasonic thread.
             # If we have driven the distance_cm we return to parent loop
@@ -123,8 +117,8 @@ class Driver:
                 return True
             # We were not currently driving so we drive.
             if not motors_on:
-                self.motor_left.move(1)
-                self.motor_right.move(1)
+                self.motor_left.move("forwards")
+                self.motor_right.move("forwards")
                 motors_on = True
 
     @staticmethod
@@ -138,7 +132,7 @@ class Driver:
         return desired_heading
 
     def turn(self, angle: int = 0, hard: bool = False):
-        if angle is 0:
+        if angle == 0:
             logging.error('I cant turn 0 degrees!')
             return False
         self.turns += 1
@@ -149,55 +143,32 @@ class Driver:
             initial_heading = rd.current_heading
         desired_heading = self.heading_calc(angle, initial_heading)
         logging.debug(f'Desired Heading: {desired_heading}')
-        # Right turn
-        if angle > 0:
-            driving = False
-            logging.debug(f'Initial heading: {initial_heading}')
-            while True:
-                # If we lose magnetometer heading mid-turn we return to navigation loop.
-                if not rd.current_heading:
-                    logging.warning(f'Current_heading is {type(rd.current_heading)}')
-                    return False
-                # If a path clears mid turn return to navigation loop
-                if rd.c_path and rd.l_clear and rd.r_clear:
-                    self.motor_left.disable()
-                    self.motor_right.disable()
-                    return True
-                if self.approximate_angle(desired_heading, rd.current_heading):
-                    logging.debug(f'Current Heading: {rd.current_heading}')
-                    logging.debug(f"{angle} Turn complete attempting to disable motors")
-                    self.motor_left.disable()
-                    self.motor_right.disable()
-                    return True
-                if driving is not True:
-                    self.motor_left.move(1, speed=self.turn_speed)
-                    self.motor_right.move(0, speed=self.turn_speed)
-                    driving = True
-
-        # Left turn
-        if angle < 0:
-            driving = False
-            logging.debug(f'Initial heading: {initial_heading}')
-            while True:
-                if not rd.current_heading:
-                    logging.warning(f'Current_heading is {type(rd.current_heading)}')
-                    return False
-                # If a path clears mid turn return
-                if rd.c_path and rd.l_clear and rd.r_clear:
-                    self.motor_left.disable()
-                    self.motor_right.disable()
-                    return True
-                if self.approximate_angle(desired_heading, rd.current_heading):
-                    logging.debug(f'Current Heading: {rd.current_heading}')
-                    logging.debug(f"{angle} Turn complete disabling motors")
-                    self.motor_left.disable()
-                    self.motor_right.disable()
-                    return True
-                if driving is not True:
-                    self.motor_left.move(0, speed=self.turn_speed)
-                    self.motor_right.move(1, speed=self.turn_speed)
-                    driving = True
-        logging.debug('Finished turn loop')
+        driving = False
+        logging.debug(f'Initial heading: {initial_heading}')
+        while True:
+            # If we lose magnetometer heading mid-turn we return to navigation loop.
+            if not rd.current_heading:
+                logging.warning(f'Current_heading is {type(rd.current_heading)}')
+                return False
+            # If a path clears mid turn return to navigation loop
+            if rd.c_path and rd.l_clear and rd.r_clear:
+                self.motor_left.disable()
+                self.motor_right.disable()
+                return True
+            if self.approximate_angle(desired_heading, rd.current_heading):
+                logging.debug(f'Current Heading: {rd.current_heading}')
+                logging.debug(f"{angle} Turn complete attempting to disable motors")
+                self.motor_left.disable()
+                self.motor_right.disable()
+                return True
+            if driving is not True:
+                if angle > 0: # Left
+                    self.motor_left.move("backwards", speed=self.turn_speed)
+                    self.motor_right.move("forwards", speed=self.turn_speed)
+                elif angle < 0: # Right
+                    self.motor_left.move("forwards", speed=self.turn_speed)
+                    self.motor_right.move("backwards", speed=self.turn_speed)
+                driving = True
 
     def abort(self):
         logging.debug('Aborting')
@@ -208,9 +179,9 @@ class Driver:
     def approximate_angle(desired, current):
         try:
             fuzzy = 5
-            if current >= (desired-fuzzy) and current <= (desired+fuzzy):
+            if (desired - fuzzy) <= current <= (desired + fuzzy):
                 return True
             else:
                 return False
         except TypeError as e:
-            logging.debug(f'Exception caught attempting None comparison')
+            logging.debug('Exception caught attempting None comparison')
